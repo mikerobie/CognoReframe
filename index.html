@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CognoReframe — Cognitive Distortion Worksheet</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow-x: hidden; }
+:root {
+  --white: #fff;
+  --page: #f9f9f7;
+  --rule: #c8c8c2;
+  --rule-dark: #8a8a82;
+  --ink: #1a1a18;
+  --ink-mid: #444440;
+  --ink-light: #7a7a74;
+  --teal: #2a6b6b;
+  --teal-light: #e8f2f2;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --sans: 'Source Sans 3', system-ui, sans-serif;
+}
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--white);
+  min-height: 100vh;
+  border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+  padding: 48px 52px 80px;
+}
+/* HEADER */
+.ws-header { border-bottom: 3px solid var(--ink); padding-bottom: 20px; margin-bottom: 32px; }
+.ws-title { font-family: var(--serif); font-weight: 600; font-size: 2rem; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 2px; }
+.ws-subtitle { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-light); }
+.ws-meta { display: flex; gap: 40px; margin-top: 18px; flex-wrap: wrap; }
+.meta-field { display: flex; align-items: baseline; gap: 8px; }
+.meta-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); white-space: nowrap; }
+.meta-input { width: 160px; border: none; border-bottom: 1.5px solid var(--rule-dark); background: transparent; font-family: var(--serif); font-size: 0.92rem; color: var(--ink); outline: none; padding: 2px 0; }
+/* PROGRESS */
+.progress-wrap { margin-bottom: 36px; }
+.progress-steps { display: flex; gap: 4px; margin-bottom: 6px; }
+.progress-dot { height: 3px; flex: 1; background: var(--rule); border-radius: 2px; transition: background 0.3s; }
+.progress-dot.done { background: var(--teal); }
+.progress-dot.active { background: var(--ink); }
+.progress-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-light); }
+/* STEPS */
+.step { display: none; }
+.step.active { display: block; animation: stepIn 0.25s ease; }
+@keyframes stepIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* SECTION LABELS */
+.section-num { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--teal); margin-bottom: 4px; }
+.section-title { font-family: var(--serif); font-weight: 600; font-size: 1.25rem; color: var(--ink); margin-bottom: 4px; }
+.section-desc { font-size: 0.82rem; color: var(--ink-light); font-style: italic; margin-bottom: 24px; line-height: 1.5; }
+/* FIELDS */
+.field-group { margin-bottom: 22px; }
+.field-label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mid); margin-bottom: 4px; }
+.field-hint { display: block; font-size: 0.75rem; color: var(--ink-light); font-style: italic; margin-bottom: 6px; }
+textarea {
+  width: 100%; border: none; border-bottom: 1.5px solid var(--rule-dark);
+  background: transparent; font-family: var(--serif); font-size: 0.95rem;
+  color: var(--ink); outline: none; resize: none; padding: 6px 0;
+  line-height: 1.7; min-height: 90px; display: block;
+}
+textarea::placeholder { color: var(--rule-dark); font-style: italic; }
+.ruled-line {
+  display: block; width: 100%; border: none; border-bottom: 1.5px solid var(--rule);
+  background: transparent; font-family: var(--serif); font-size: 0.92rem;
+  color: var(--ink); outline: none; padding: 7px 0;
+}
+.ruled-line::placeholder { color: var(--rule-dark); font-style: italic; }
+/* OPTION GROUPS (checkbox + radio) — all divs, no labels */
+.option-group { border-top: 1.5px solid var(--rule); }
+.check-item, .radio-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 8px; border-bottom: 1.5px solid var(--rule);
+  cursor: pointer; user-select: none; transition: background 0.1s, padding-left 0.1s;
+}
+.check-item:hover, .radio-item:hover { background: #f7f7f5; }
+.check-item.selected { background: var(--teal-light); }
+.radio-item.selected { background: var(--teal-light); }
+/* checkbox visual */
+.check-box-ui {
+  width: 16px; height: 16px; margin-top: 2px;
+  border: 1.5px solid var(--rule-dark); border-radius: 2px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+.check-item.selected .check-box-ui { border-color: var(--teal); background: var(--teal); }
+.check-item.selected .check-box-ui::after {
+  content: ''; display: block; width: 8px; height: 5px;
+  border-left: 2px solid white; border-bottom: 2px solid white;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+/* radio visual */
+.radio-dot-ui {
+  width: 16px; height: 16px; margin-top: 2px;
+  border: 1.5px solid var(--rule-dark); border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+.radio-item.selected .radio-dot-ui { border-color: var(--teal); }
+.radio-item.selected .radio-dot-ui::after {
+  content: ''; display: block; width: 8px; height: 8px;
+  background: var(--teal); border-radius: 50%;
+}
+.check-item-body { flex: 1; }
+.check-item-label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--ink); margin-bottom: 1px; }
+.check-item-sub { font-size: 0.78rem; color: var(--ink-light); font-style: italic; }
+.radio-item-text { font-size: 0.88rem; color: var(--ink); line-height: 1.5; }
+.radio-item-text em { font-style: italic; color: var(--ink-light); font-size: 0.82rem; }
+/* DIVIDER */
+.divider { border: none; border-top: 1.5px solid var(--rule); margin: 24px 0; }
+/* BUTTONS */
+.btn-row { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+.btn {
+  font-family: var(--sans); font-weight: 600; font-size: 0.78rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 11px 26px; border: 1.5px solid var(--ink);
+  background: transparent; color: var(--ink); cursor: pointer;
+  border-radius: 2px; transition: all 0.15s;
+}
+.btn:hover { background: var(--ink); color: white; }
+.btn.primary { background: var(--teal); border-color: var(--teal); color: white; }
+.btn.primary:hover { background: #1e5050; border-color: #1e5050; }
+.error-msg { font-size: 0.78rem; color: #b33; margin-top: 10px; display: none; }
+/* THINKING */
+#thinking { display: none; text-align: center; padding: 80px 0; }
+#thinking.active { display: block; }
+.spinner { width: 32px; height: 32px; border: 2px solid var(--rule); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.thinking-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-light); }
+/* RESULTS */
+#results { display: none; }
+#results.active { display: block; }
+.results-intro { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 2px solid var(--ink); }
+.results-title { font-family: var(--serif); font-weight: 600; font-size: 1.35rem; margin-bottom: 4px; }
+.results-sub { font-size: 0.8rem; color: var(--ink-light); font-style: italic; }
+.distortion-block { margin-bottom: 32px; border-top: 1.5px solid var(--rule); padding-top: 20px; }
+.db-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.db-rank { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal); }
+.db-name { font-family: var(--serif); font-weight: 600; font-size: 1.05rem; color: var(--ink); }
+.db-confidence { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); border: 1px solid var(--rule-dark); padding: 2px 8px; border-radius: 2px; }
+.db-definition { font-size: 0.82rem; color: var(--ink-light); font-style: italic; margin-bottom: 14px; line-height: 1.6; }
+.db-why-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mid); margin-bottom: 4px; }
+.db-why { font-size: 0.88rem; color: var(--ink); line-height: 1.65; margin-bottom: 14px; }
+.reframe-block { background: var(--teal-light); border-left: 3px solid var(--teal); padding: 12px 16px; margin-bottom: 14px; }
+.reframe-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 4px; }
+.reframe-text { font-size: 0.88rem; color: var(--ink); line-height: 1.65; }
+.write-label { display: block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mid); margin-bottom: 4px; }
+.disclaimer { margin-top: 32px; padding: 16px; border: 1.5px dashed var(--rule-dark); font-size: 0.75rem; color: var(--ink-light); line-height: 1.6; }
+footer { margin-top: 52px; padding-top: 18px; border-top: 1.5px solid var(--rule); display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--ink-light); flex-wrap: wrap; gap: 6px; }
+@media (max-width: 640px) {
+  .page { padding: 24px 16px 60px; border: none; }
+  .ws-title { font-size: 1.5rem; }
+  .ws-subtitle { font-size: 0.65rem; }
+  .ws-meta { gap: 12px; margin-top: 12px; flex-direction: column; }
+  .meta-input { width: 100%; }
+  .section-title { font-size: 1.05rem; }
+  .section-desc { font-size: 0.78rem; }
+  .field-label { font-size: 0.7rem; }
+  .field-hint { font-size: 0.7rem; }
+  textarea { font-size: 0.88rem; min-height: 72px; }
+  .ruled-line { font-size: 0.85rem; padding: 9px 0; }
+  .check-item, .radio-item { padding: 10px 6px; gap: 10px; }
+  .check-item-label { font-size: 0.82rem; }
+  .check-item-sub { font-size: 0.72rem; }
+  .radio-item-text { font-size: 0.82rem; }
+  .btn-row { flex-direction: column; margin-top: 24px; }
+  .btn { text-align: center; width: 100%; padding: 13px 16px; font-size: 0.75rem; }
+  .db-name { font-size: 0.95rem; }
+  .db-definition { font-size: 0.78rem; }
+  .db-why { font-size: 0.82rem; }
+  .reframe-text { font-size: 0.82rem; }
+  .db-header { gap: 6px; }
+  .results-title { font-size: 1.1rem; }
+  .disclaimer { font-size: 0.72rem; padding: 12px; }
+  footer { font-size: 0.65rem; flex-direction: column; gap: 2px; }
+  .progress-wrap { margin-bottom: 24px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="ws-header">
+    <div class="ws-title">CognoReframe</div>
+    <div class="ws-subtitle">Cognitive Distortion Worksheet — CBT Based</div>
+    <div class="ws-meta">
+      <div class="meta-field">
+        <span class="meta-label">Name</span>
+        <input class="meta-input" id="meta-name" type="text" placeholder="_______________">
+      </div>
+      <div class="meta-field">
+        <span class="meta-label">Date</span>
+        <input class="meta-input" id="meta-date" type="text" placeholder="_______________">
+      </div>
+    </div>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-steps" id="progress-steps"></div>
+    <div class="progress-label" id="progress-label">Step 1 of 5</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step active" id="step-1">
+    <div class="section-num">Section 1 of 5</div>
+    <div class="section-title">What happened, and what are you telling yourself?</div>
+    <div class="section-desc">Separate the observable facts from the story your mind is constructing about what they mean.</div>
+    <div class="field-group">
+      <span class="field-label">What actually happened?</span>
+      <span class="field-hint">Senses only — what did you see, hear, or observe?</span>
+      <textarea id="q1a" placeholder="e.g. My manager didn't respond to my email for two days."></textarea>
+    </div>
+    <div class="field-group">
+      <span class="field-label">What are you telling yourself it means?</span>
+      <span class="field-hint">The story in your head — what you're interpreting or assuming</span>
+      <textarea id="q1b" placeholder="e.g. She's ignoring me because I did something wrong and she's disappointed in me."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="next(1)">Continue →</button>
+    </div>
+    <div class="error-msg" id="err1">Please describe what happened before continuing.</div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="step-2">
+    <div class="section-num">Section 2 of 5</div>
+    <div class="section-title">How does this thought make you feel?</div>
+    <div class="section-desc">Check all emotions that apply. Naming the feeling is the first step to regulating it.</div>
+    <div class="option-group" id="q2-group">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="anxious or worried" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">Anxious / Worried</span>
+          <span class="check-item-sub">Dread, unease, "what if" looping</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="ashamed or embarrassed" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">Ashamed / Embarrassed</span>
+          <span class="check-item-sub">Want to hide, feeling exposed</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="sad or hopeless" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">Sad / Hopeless</span>
+          <span class="check-item-sub">Heavy, flat, low energy</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="angry or frustrated" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">Angry / Frustrated</span>
+          <span class="check-item-sub">Tight chest, urge to react</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="guilty" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">Guilty</span>
+          <span class="check-item-sub">Feeling responsible, replaying events</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="scared about the future" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">Fearful / Dreading the future</span>
+          <span class="check-item-sub">Anticipating a bad outcome</span>
+        </div>
+      </div>
+    </div>
+    <div class="field-group" style="margin-top:24px">
+      <span class="field-label">Emotional intensity right now</span>
+      <div class="option-group">
+        <div class="radio-item" onclick="selectRadio(this,'intensity')">
+          <input type="radio" name="intensity" value="mild (1-3)" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text"><strong>Mild</strong> — 1–3 &nbsp;<em>Noticeable but manageable</em></span>
+        </div>
+        <div class="radio-item" onclick="selectRadio(this,'intensity')">
+          <input type="radio" name="intensity" value="moderate (4-6)" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text"><strong>Moderate</strong> — 4–6 &nbsp;<em>Affecting my focus or mood</em></span>
+        </div>
+        <div class="radio-item" onclick="selectRadio(this,'intensity')">
+          <input type="radio" name="intensity" value="high (7-10)" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text"><strong>High</strong> — 7–10 &nbsp;<em>Hard to think clearly</em></span>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="back(2)">← Back</button>
+      <button class="btn primary" onclick="next(2)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="step-3">
+    <div class="section-num">Section 3 of 5</div>
+    <div class="section-title">Does your interpretation match the evidence?</div>
+    <div class="section-desc">Separate what you observed from what you assumed. This is the core of CBT fact-checking.</div>
+    <div class="field-group">
+      <span class="field-label">Evidence that supports my interpretation</span>
+      <input class="ruled-line" id="s3-ef1" type="text" placeholder="1.">
+      <input class="ruled-line" id="s3-ef2" type="text" placeholder="2.">
+      <input class="ruled-line" id="s3-ef3" type="text" placeholder="3.">
+    </div>
+    <div class="field-group">
+      <span class="field-label">Evidence against my interpretation</span>
+      <input class="ruled-line" id="s3-ea1" type="text" placeholder="1.">
+      <input class="ruled-line" id="s3-ea2" type="text" placeholder="2.">
+      <input class="ruled-line" id="s3-ea3" type="text" placeholder="3.">
+    </div>
+    <div class="field-group">
+      <span class="field-label">How would a neutral observer describe this situation?</span>
+      <textarea id="s3-neutral" style="min-height:70px" placeholder="e.g. A manager who is busy and hasn't responded to a routine email yet."></textarea>
+    </div>
+    <div class="field-group">
+      <span class="field-label">Three other possible explanations for what happened</span>
+      <input class="ruled-line" id="s3-alt1" type="text" placeholder="1.">
+      <input class="ruled-line" id="s3-alt2" type="text" placeholder="2.">
+      <input class="ruled-line" id="s3-alt3" type="text" placeholder="3.">
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="back(3)">← Back</button>
+      <button class="btn primary" onclick="next(3)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" id="step-4">
+    <div class="section-num">Section 4 of 5</div>
+    <div class="section-title">Which thought patterns are present?</div>
+    <div class="section-desc">Check any phrases that match your internal dialogue right now. More than one may apply.</div>
+    <div class="option-group" id="q4-group">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="always_never" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">"This always happens to me" / "I never get it right"</span>
+          <span class="check-item-sub">Using absolute terms — always, never, everyone, no one</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="catastrophe" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">"This is a disaster" / "Everything will fall apart"</span>
+          <span class="check-item-sub">Escalating quickly to worst-case outcomes</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="my_fault" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">"This is my fault" / "I should have known better"</span>
+          <span class="check-item-sub">Taking full responsibility for complex situations</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="feel_true" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">"I feel terrible, so something must be terribly wrong"</span>
+          <span class="check-item-sub">Using emotions as evidence of objective facts</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="must_should" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">"I should be better / stronger / different"</span>
+          <span class="check-item-sub">Rigid rules with no room for context or circumstance</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="mind_read" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">"I know what they're thinking about me"</span>
+          <span class="check-item-sub">Assuming others' thoughts without direct evidence</span>
+        </div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <input type="checkbox" value="fortune_tell" style="display:none">
+        <div class="check-box-ui"></div>
+        <div class="check-item-body">
+          <span class="check-item-label">"I know this will go wrong"</span>
+          <span class="check-item-sub">Predicting negative outcomes as established fact</span>
+        </div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="field-group">
+      <span class="field-label">Is there positive evidence you're dismissing?</span>
+      <div class="option-group">
+        <div class="radio-item" onclick="selectRadio(this,'evidence')">
+          <input type="radio" name="evidence" value="yes_dismissing" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text">Yes — I keep discounting it <em>(compliments, past successes, kind words)</em></span>
+        </div>
+        <div class="radio-item" onclick="selectRadio(this,'evidence')">
+          <input type="radio" name="evidence" value="maybe" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text">Maybe — I'm genuinely unsure what to believe</span>
+        </div>
+        <div class="radio-item" onclick="selectRadio(this,'evidence')">
+          <input type="radio" name="evidence" value="no" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text">No — I believe the evidence fully supports my view</span>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="back(4)">← Back</button>
+      <button class="btn primary" onclick="next(4)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step" id="step-5">
+    <div class="section-num">Section 5 of 5</div>
+    <div class="section-title">A few final questions before analysis</div>
+    <div class="section-desc">These help calibrate which distortions are most likely at play.</div>
+    <div class="field-group">
+      <span class="field-label">Has this type of thought happened before in similar situations?</span>
+      <div class="option-group">
+        <div class="radio-item" onclick="selectRadio(this,'pattern')">
+          <input type="radio" name="pattern" value="yes_pattern" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text">Yes — this is a recurring pattern for me</span>
+        </div>
+        <div class="radio-item" onclick="selectRadio(this,'pattern')">
+          <input type="radio" name="pattern" value="sometimes" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text">Sometimes — it comes up in certain situations</span>
+        </div>
+        <div class="radio-item" onclick="selectRadio(this,'pattern')">
+          <input type="radio" name="pattern" value="no_new" style="display:none">
+          <div class="radio-dot-ui"></div>
+          <span class="radio-item-text">No — this feels more unusual for me</span>
+        </div>
+      </div>
+    </div>
+    <div class="field-group">
+      <span class="field-label">If a close friend described this same situation to you, what would you say to them?</span>
+      <textarea id="q5-friend" placeholder="e.g. I'd probably tell them that one unanswered email doesn't mean anything is wrong..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="back(5)">← Back</button>
+      <button class="btn primary" onclick="analyze()">Identify distortions →</button>
+    </div>
+    <div class="error-msg" id="err5">Please go back and describe what happened in Section 1 before analyzing.</div>
+  </div>
+
+  <!-- THINKING -->
+  <div id="thinking">
+    <div class="spinner"></div>
+    <div class="thinking-label">Analyzing thought patterns…</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-intro">
+      <div class="results-title">Distortion Analysis — Results</div>
+      <div class="results-sub">Based on your responses. These are possibilities to explore, not diagnoses. Use the write-in fields below each finding.</div>
+    </div>
+    <div id="results-cards"></div>
+    <hr class="divider">
+    <div class="field-group">
+      <span class="field-label" style="font-family:var(--serif);font-size:0.9rem;letter-spacing:0;text-transform:none;font-weight:600">Rewritten balanced thought</span>
+      <span class="field-hint">Using the reframe ideas above, write a more accurate version of the original thought.</span>
+      <textarea id="result-balanced" placeholder="e.g. My manager hasn't responded yet — she's probably busy. I'll follow up tomorrow."></textarea>
+    </div>
+    <div class="field-group">
+      <span class="field-label" style="font-family:var(--serif);font-size:0.9rem;letter-spacing:0;text-transform:none;font-weight:600">One small next step I can take</span>
+      <textarea id="result-nextstep" style="min-height:60px" placeholder="e.g. Send a brief follow-up email tomorrow morning, then let it go."></textarea>
+    </div>
+    <div class="disclaimer">
+      <strong>Note:</strong> CognoReframe is a psychoeducational tool, not a substitute for therapy. Distortion categories are drawn from Aaron Beck's cognitive model and David Burns' <em>Feeling Good</em> research. If you are in crisis, call or text <strong>988</strong>.
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="generatePDF()">⬇ Download PDF</button>
+      <button class="btn" onclick="restart()">Start over</button>
+    </div>
+  </div>
+
+  <footer>
+    <span>CognoReframe — Cognitive Distortion Worksheet</span>
+    <span>Based on CBT research · Beck &amp; Burns</span>
+  </footer>
+</div>
+
+<script>
+const DISTORTIONS = {
+  all_or_nothing: { name:"All-or-Nothing Thinking", definition:"Seeing situations in absolute, black-and-white terms — total success or complete failure, with no middle ground.", reframe:"Try assigning a percentage: 'I handled this about 60% well.' Reality almost always lives in the gray zone between extremes." },
+  overgeneralization: { name:"Overgeneralization", definition:"Drawing broad conclusions from a single event. Because something went wrong once, it will 'always' go wrong.", reframe:"Ask: 'Is this truly a pattern, or just one data point?' One rough day is not a life sentence." },
+  mental_filter: { name:"Mental Filter", definition:"Focusing exclusively on negatives while filtering out positives — one drop of ink clouds the whole glass.", reframe:"Deliberately list three things that went right in the same situation. Your filter may be selectively deleting them." },
+  disqualifying_positive: { name:"Disqualifying the Positive", definition:"Rejecting positive experiences by insisting they 'don't count' — the compliment was politeness, the success was luck.", reframe:"When you dismiss a positive, ask: 'Would I apply this same skepticism to a negative outcome?' Probably not." },
+  mind_reading: { name:"Mind Reading", definition:"Assuming you know what others are thinking — usually negatively — without any real evidence.", reframe:"Ask: 'What would I actually need to verify this assumption?' You don't have direct access to anyone else's thoughts." },
+  fortune_telling: { name:"Fortune Telling", definition:"Predicting a negative outcome as if it's already established fact, then acting as though that prediction is true.", reframe:"List three other plausible outcomes. The future contains multitudes — your worst-case scenario is just one of many." },
+  catastrophizing: { name:"Catastrophizing", definition:"Exaggerating the importance of problems and spiraling toward the worst possible outcome.", reframe:"Use the 'So what?' chain: What's the realistic worst case? And if that happened, could you cope? Usually: yes." },
+  minimization: { name:"Minimization", definition:"Shrinking your own positives, achievements, or strengths while magnifying negatives.", reframe:"Would you describe a friend's similar achievement this dismissively? Apply the same fair standard to yourself." },
+  emotional_reasoning: { name:"Emotional Reasoning", definition:"'I feel it, therefore it must be true.' Using your emotional state as evidence of objective fact.", reframe:"'I feel like a failure' is a sensation, not a job performance review. Feelings are real — but they are not facts." },
+  should_statements: { name:"Should Statements", definition:"Holding yourself or others to rigid, inflexible rules. Violations trigger guilt or resentment.", reframe:"Replace 'should' with 'could' or 'I'd like to.' Ask: who set this rule, and is it still serving you?" },
+  labeling: { name:"Labeling", definition:"Attaching a global, negative label to yourself or others based on a single event: 'I'm a failure.'", reframe:"You are a complex person who did a thing, not a label. 'I made a mistake' is far more accurate than 'I am a mistake.'" },
+  personalization: { name:"Personalization", definition:"Taking excessive personal responsibility for events outside your control, or blaming yourself for others' feelings.", reframe:"List all the external factors involved. You are one variable among many — rarely the sole cause of anything." },
+  jumping_conclusions: { name:"Jumping to Conclusions", definition:"Reaching a negative conclusion without sufficient evidence — mind reading and fortune telling in one leap.", reframe:"Ask: 'What am I assuming that I haven't confirmed?' Test the conclusion before accepting it as fact." }
+};
+
+const totalSteps = 5;
+let currentStep = 1;
+const answers = {};
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('meta-date').placeholder =
+    new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  buildProgress();
+  updateProgress();
+});
+
+function buildProgress() {
+  const wrap = document.getElementById('progress-steps');
+  wrap.innerHTML = '';
+  for (let i = 1; i <= totalSteps; i++) {
+    const d = document.createElement('div');
+    d.className = 'progress-dot'; d.id = 'pd-'+i;
+    wrap.appendChild(d);
+  }
+}
+
+function updateProgress() {
+  for (let i = 1; i <= totalSteps; i++) {
+    const d = document.getElementById('pd-'+i);
+    if (!d) continue;
+    d.className = 'progress-dot'+(i<currentStep?' done':i===currentStep?' active':'');
+  }
+  document.getElementById('progress-label').textContent =
+    currentStep<=totalSteps ? `Step ${currentStep} of ${totalSteps}` : 'Complete';
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('step-'+n);
+  if (el) { el.classList.add('active'); window.scrollTo(0,0); }
+  currentStep = n;
+  updateProgress();
+}
+
+function next(from) {
+  if (from===1) {
+    const a = document.getElementById('q1a').value.trim();
+    if (!a) { document.getElementById('err1').style.display='block'; return; }
+    document.getElementById('err1').style.display='none';
+    answers.situation = a;
+    answers.story = document.getElementById('q1b').value.trim();
+  }
+  if (from===2) {
+    answers.emotions = [...document.querySelectorAll('#q2-group .check-item.selected')].map(el=>el.querySelector('input').value);
+    const s = document.querySelector('input[name="intensity"]:checked');
+    answers.intensity = s ? s.value : 'not specified';
+  }
+  if (from===4) {
+    answers.patterns = [...document.querySelectorAll('#q4-group .check-item.selected')].map(el=>el.querySelector('input').value);
+    const s = document.querySelector('input[name="evidence"]:checked');
+    answers.evidence = s ? s.value : 'not specified';
+  }
+  if (from < totalSteps) showStep(from+1);
+}
+
+function back(from) { if (from>1) showStep(from-1); }
+
+function toggleCheck(el) {
+  el.classList.toggle('selected');
+  const cb = el.querySelector('input[type=checkbox]');
+  if (cb) cb.checked = el.classList.contains('selected');
+}
+
+function selectRadio(el, name) {
+  document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+    const p = r.closest('.radio-item');
+    if (p) p.classList.remove('selected');
+  });
+  el.classList.add('selected');
+  const r = el.querySelector('input[type=radio]');
+  if (r) r.checked = true;
+}
+
+async function analyze() {
+  const q1a = document.getElementById('q1a').value.trim();
+  if (!q1a) { document.getElementById('err5').style.display='block'; return; }
+  document.getElementById('err5').style.display='none';
+  const ps = document.querySelector('input[name="pattern"]:checked');
+  answers.pattern = ps ? ps.value : 'not specified';
+  answers.friendAdvice = document.getElementById('q5-friend').value.trim();
+
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  currentStep = 6; updateProgress();
+  document.getElementById('thinking').classList.add('active');
+  window.scrollTo(0,0);
+
+  const emo = answers.emotions?.length ? answers.emotions.join(', ') : 'not specified';
+  const pat = answers.patterns?.length ? answers.patterns.join(', ') : 'none selected';
+
+  const sys = `You are a CBT-informed cognitive distortion analyst. Return ONLY valid JSON, no markdown, no extra text.
+Structure: { "distortions": [{ "key": "...", "confidence": "High|Medium|Low", "why": "1-2 sentences specific to their situation.", "reframe": "1-2 concrete personalized sentences." }] }
+Valid keys: all_or_nothing, overgeneralization, mental_filter, disqualifying_positive, mind_reading, fortune_telling, catastrophizing, minimization, emotional_reasoning, should_statements, labeling, personalization, jumping_conclusions
+Return 2-3 distortions ranked by confidence. Be compassionate and specific.`;
+
+  const msg = `Situation: "${answers.situation}"\nInterpretation: "${answers.story}"\nEmotions: ${emo}\nIntensity: ${answers.intensity}\nPatterns: ${pat}\nDismissing positives: ${answers.evidence}\nRecurring: ${answers.pattern}\nFriend advice: "${answers.friendAdvice}"`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system:sys, messages:[{role:'user',content:msg}] })
+    });
+    const data = await res.json();
+    const raw = data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    renderResults(JSON.parse(raw).distortions);
+  } catch(e) { renderResults(fallback()); }
+}
+
+function fallback() {
+  const story = ((answers.story||'')+(answers.situation||'')).toLowerCase();
+  const p = answers.patterns||[], ev = answers.evidence||'', out=[];
+  if (p.includes('always_never')||/always|never/.test(story)) out.push({key:'overgeneralization',confidence:'High',why:'Your language uses absolute terms ("always," "never") — a hallmark of overgeneralization.',reframe:'Try replacing "always" with "sometimes" and notice how the thought softens.'});
+  if (p.includes('catastrophe')||/disaster|ruined|terrible/.test(story)) out.push({key:'catastrophizing',confidence:'High',why:'Your thought escalates quickly toward worst-case outcomes.',reframe:"Ask: what's the most realistic outcome? Could you cope even if things went badly?"});
+  if (p.includes('mind_read')||/they think|she thinks/.test(story)) out.push({key:'mind_reading',confidence:'High',why:"You're drawing conclusions about others' thoughts without direct evidence.",reframe:"What would you need to hear to confirm this? You may not have that evidence."});
+  if (p.includes('feel_true')) out.push({key:'emotional_reasoning',confidence:'Medium',why:'Your feelings are being used as proof the thought is true.',reframe:"'I feel rejected' is a sensation. It's not the same as confirmed rejection."});
+  if (p.includes('my_fault')) out.push({key:'personalization',confidence:'Medium',why:"You're taking full personal responsibility for something involving many factors.",reframe:'List 3 external factors that also played a role.'});
+  if (ev==='yes_dismissing') out.push({key:'disqualifying_positive',confidence:'High',why:'You acknowledge positive evidence but keep dismissing it.',reframe:"Would you wave this away for a friend? Probably not."});
+  if (p.includes('must_should')) out.push({key:'should_statements',confidence:'High',why:"Your inner voice uses rigid 'should' language.",reframe:"Replace 'I should' with 'I'd like to' and feel the pressure shift."});
+  return out.slice(0,3).length ? out.slice(0,3) : [
+    {key:'all_or_nothing',confidence:'Medium',why:'Your thought may be framing a complex situation in absolute terms.',reframe:'Try rating the situation 0–100% rather than as a binary pass/fail.'},
+    {key:'emotional_reasoning',confidence:'Medium',why:'Feelings may be driving your perception of the facts.',reframe:'Ask: what would I think about this if I felt calm right now?'}
+  ];
+}
+
+function renderResults(distortions) {
+  document.getElementById('thinking').classList.remove('active');
+  document.getElementById('results').classList.add('active');
+  window.scrollTo(0,0);
+  const c = document.getElementById('results-cards');
+  c.innerHTML = '';
+  distortions.forEach((d,i) => {
+    const info = DISTORTIONS[d.key]; if (!info) return;
+    const b = document.createElement('div');
+    b.className = 'distortion-block';
+    b.innerHTML = `
+      <div class="db-header">
+        <span class="db-rank">Finding #${i+1}</span>
+        <span class="db-name">${info.name}</span>
+        <span class="db-confidence">${d.confidence||'Medium'} match</span>
+      </div>
+      <div class="db-definition">${info.definition}</div>
+      <div class="db-why-label">Why this fits your situation</div>
+      <div class="db-why">${d.why}</div>
+      <div class="reframe-block">
+        <div class="reframe-label">Reframe suggestion</div>
+        <div class="reframe-text">${d.reframe}</div>
+      </div>
+      <span class="write-label">My response to this finding</span>
+      <textarea style="min-height:60px;font-size:0.88rem" placeholder="Write your reaction, disagreement, or insight here…"></textarea>`;
+    c.appendChild(b);
+  });
+}
+
+function generatePDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:'pt',format:'letter'});
+  const W=612,H=792,ML=56,MR=56,CW=W-ML-MR;
+  let y=56;
+  const TEAL=[42,107,107],INK=[26,26,24],MID=[68,68,64],LIGHT=[122,122,116],RULE=[200,200,194],TEAL_BG=[232,242,242];
+  function newPage(){doc.addPage();y=56;}
+  function checkY(n){if(y+n>H-48)newPage();}
+  function wrap(t,mw,s){doc.setFontSize(s);return doc.splitTextToSize(t||'',mw);}
+  function hline(c,w){doc.setDrawColor(...(c||RULE));doc.setLineWidth(w||0.5);doc.line(ML,y,W-MR,y);}
+  function secHead(lbl,ttl){
+    checkY(44);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...TEAL);doc.text(lbl.toUpperCase(),ML,y);y+=14;
+    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...INK);doc.text(ttl,ML,y);y+=6;
+    hline(RULE,0.75);y+=14;
+  }
+  function field(lbl,val){
+    checkY(36);
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...MID);doc.text(lbl.toUpperCase(),ML,y);y+=12;
+    const lines=wrap(val||'(not filled in)',CW,9.5);
+    checkY(lines.length*13+8);
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...INK);doc.text(lines,ML,y);y+=lines.length*13+4;
+    hline(RULE,0.4);y+=14;
+  }
+  function chkList(lbl,items){
+    checkY(24);
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...MID);doc.text(lbl.toUpperCase(),ML,y);y+=12;
+    if(!items||!items.length){doc.setFont('helvetica','italic');doc.setFontSize(9);doc.setTextColor(...LIGHT);doc.text('(none selected)',ML+14,y);y+=14;}
+    else items.forEach(item=>{
+      checkY(14);
+      doc.setFillColor(...TEAL);doc.setDrawColor(...TEAL);doc.roundedRect(ML,y-8,8,8,1,1,'FD');
+      doc.setDrawColor(255,255,255);doc.setLineWidth(1.2);doc.line(ML+1.5,y-4,ML+3.5,y-2);doc.line(ML+3.5,y-2,ML+6.5,y-7);
+      const wl=wrap(item,CW-16,9);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...INK);doc.text(wl,ML+14,y-1);y+=wl.length*12+2;
+    });
+    y+=6;
+  }
+  function distBlock(rank,name,conf,def,why,reframe,resp){
+    checkY(120);
+    doc.setFillColor(...INK);doc.rect(ML,y,CW,22,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...TEAL);doc.text(`FINDING #${rank}`,ML+8,y+8.5);
+    doc.setFontSize(10);doc.setTextColor(255,255,255);doc.text(name,ML+65,y+14);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(180,210,210);doc.text(`${conf} match`,W-MR-8,y+14,{align:'right'});
+    y+=30;
+    const dl=wrap(def,CW,8.5);checkY(dl.length*11+8);doc.setFont('helvetica','italic');doc.setFontSize(8.5);doc.setTextColor(...LIGHT);doc.text(dl,ML,y);y+=dl.length*11+10;
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...MID);doc.text('WHY THIS FITS YOUR SITUATION',ML,y);y+=11;
+    const wl=wrap(why,CW,9.5);checkY(wl.length*13+4);doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...INK);doc.text(wl,ML,y);y+=wl.length*13+10;
+    const rl=wrap(reframe,CW-20,9);checkY(rl.length*12+24);
+    doc.setFillColor(...TEAL_BG);doc.rect(ML,y,CW,rl.length*12+22,'F');
+    doc.setDrawColor(...TEAL);doc.setLineWidth(2);doc.line(ML,y,ML,y+rl.length*12+22);
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...TEAL);doc.text('REFRAME SUGGESTION',ML+10,y+11);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...INK);doc.text(rl,ML+10,y+22);y+=rl.length*12+30;
+    if(resp){const rsl=wrap(resp,CW,9);checkY(rsl.length*12+20);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...MID);doc.text('MY RESPONSE',ML,y);y+=11;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...INK);doc.text(rsl,ML,y);y+=rsl.length*12+6;}
+    y+=16;
+  }
+  // Header
+  doc.setFillColor(...INK);doc.rect(0,0,W,72,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(26);doc.setTextColor(255,255,255);doc.text('CognoReframe',ML,40);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...TEAL_BG);doc.text('COGNITIVE DISTORTION WORKSHEET  ·  CBT BASED',ML,56);
+  const uName=document.getElementById('meta-name')?.value?.trim()||'';
+  const uDate=document.getElementById('meta-date')?.value?.trim()||new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...LIGHT);doc.text('NAME',ML,84);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...INK);doc.text(uName||'___________________________',ML+30,84);
+  doc.text('DATE',ML+260,84);doc.text(uDate,ML+285,84);
+  doc.setDrawColor(...RULE);doc.setLineWidth(0.5);doc.line(ML,90,W-MR,90);y=106;
+  // S1
+  secHead('Section 1 — The Situation','What happened & what you told yourself');
+  field('What actually happened',document.getElementById('q1a')?.value);
+  field('What you told yourself it means',document.getElementById('q1b')?.value);
+  // S2
+  checkY(60);secHead('Section 2 — Emotional Response','How this thought made you feel');
+  chkList('Emotions checked',[...document.querySelectorAll('#q2-group .check-item.selected')].map(el=>el.querySelector('input').value));
+  const intS=document.querySelector('input[name="intensity"]:checked');
+  field('Emotional intensity',intS?intS.value:'(not selected)');
+  // S3
+  checkY(60);secHead('Section 3 — Checking the Facts','Evidence for and against');
+  const ef=['s3-ef1','s3-ef2','s3-ef3'].map(id=>document.getElementById(id)?.value).filter(Boolean);
+  const ea=['s3-ea1','s3-ea2','s3-ea3'].map(id=>document.getElementById(id)?.value).filter(Boolean);
+  const alt=['s3-alt1','s3-alt2','s3-alt3'].map(id=>document.getElementById(id)?.value).filter(Boolean);
+  field('Evidence supporting interpretation',ef.join('\n')||'(not filled in)');
+  field('Evidence against interpretation',ea.join('\n')||'(not filled in)');
+  field('Neutral observer description',document.getElementById('s3-neutral')?.value||'(not filled in)');
+  field('Other possible explanations',alt.join('\n')||'(not filled in)');
+  // S4
+  checkY(60);secHead('Section 4 — Inner Voice Check','Thought patterns present');
+  chkList('Patterns checked',[...document.querySelectorAll('#q4-group .check-item.selected')].map(el=>el.querySelector('.check-item-label')?.textContent||''));
+  const evS=document.querySelector('input[name="evidence"]:checked');
+  field('Positive evidence dismissal',evS?evS.closest('.radio-item')?.querySelector('.radio-item-text')?.textContent?.trim():'(not selected)');
+  // S5
+  checkY(60);secHead('Section 5 — Self-Assessment','Final questions');
+  const patS=document.querySelector('input[name="pattern"]:checked');
+  field('Recurring pattern?',patS?patS.closest('.radio-item')?.querySelector('.radio-item-text')?.textContent?.trim():'(not selected)');
+  field('What I would tell a friend',document.getElementById('q5-friend')?.value);
+  // Results page
+  newPage();
+  doc.setFillColor(...TEAL);doc.rect(0,0,W,52,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(255,255,255);doc.text('Distortion Analysis — Results',ML,32);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...TEAL_BG);doc.text('Based on your responses. Possibilities to explore, not diagnoses.',ML,46);
+  y=70;
+  document.querySelectorAll('#results-cards .distortion-block').forEach((card,i)=>{
+    distBlock(i+1,card.querySelector('.db-name')?.textContent?.trim()||'',card.querySelector('.db-confidence')?.textContent?.replace(' match','').trim()||'',card.querySelector('.db-definition')?.textContent?.trim()||'',card.querySelector('.db-why')?.textContent?.trim()||'',card.querySelector('.reframe-text')?.textContent?.trim()||'',card.querySelector('textarea')?.value?.trim()||'');
+  });
+  checkY(60);secHead('Your Reframe','In your own words');
+  field('Rewritten balanced thought',document.getElementById('result-balanced')?.value);
+  field('One small next step',document.getElementById('result-nextstep')?.value);
+  checkY(48);
+  doc.setFillColor(248,248,246);doc.rect(ML,y,CW,44,'F');
+  doc.setDrawColor(...RULE);doc.setLineWidth(0.5);doc.rect(ML,y,CW,44,'S');
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...MID);doc.text('NOTE',ML+8,y+12);
+  const disc="CognoReframe is a psychoeducational tool, not a substitute for therapy. Based on Aaron Beck's cognitive model and David Burns' Feeling Good research. If you are in crisis, call or text 988.";
+  const dlx=wrap(disc,CW-16,8);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...LIGHT);doc.text(dlx,ML+8,y+22);
+  // Page numbers
+  const pc=doc.internal.getNumberOfPages();
+  for(let p=1;p<=pc;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...LIGHT);doc.text('CognoReframe — Cognitive Distortion Worksheet',ML,H-24);doc.text(`Page ${p} of ${pc}`,W-MR,H-24,{align:'right'});}
+  doc.save(uName?`CognoReframe_${uName.replace(/\s+/g,'_')}.pdf`:'CognoReframe_Worksheet.pdf');
+}
+
+function restart(){
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  document.querySelectorAll('textarea').forEach(el=>{if(!['result-balanced','result-nextstep'].includes(el.id)||true) el.value='';});
+  document.querySelectorAll('input[type=text]:not(#meta-name):not(#meta-date)').forEach(el=>el.value='');
+  document.querySelectorAll('.check-item.selected,.radio-item.selected').forEach(el=>{
+    el.classList.remove('selected');
+    const inp=el.querySelector('input'); if(inp) inp.checked=false;
+  });
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('results-cards').innerHTML='';
+  showStep(1);
+}
+</script>
+</body>
+</html>
